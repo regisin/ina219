@@ -1,7 +1,11 @@
 #include "ina219.h"
 
-#include <wiringPiI2C.h>
+// #include <wiringPiI2C.h>
 #include <unistd.h>
+#include <fcntl.h>				//Needed for I2C port
+#include <sys/ioctl.h>			//Needed for I2C port
+#include <linux/i2c-dev.h>		//Needed for I2C port
+
 #include <bitset>
 #include <math.h>
 #include <float.h>
@@ -9,21 +13,57 @@
 /* Constructors */
 INA219::INA219(int shunt_resistance)
 {
-	_file_descriptor = wiringPiI2CSetup(__ADDRESS);
+	char *filename = (char*)"/dev/i2c-1";
+	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
+		//ERROR HANDLING: you can check errno to see what went wrong
+	}
+	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
+		//ERROR HANDLING; you can check errno to see what went wrong
+	}
+	// _file_descriptor = wiringPiI2CSetup(__ADDRESS);
+
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
 }
 INA219::INA219(int shunt_resistance, uint8_t address)
 {
-	_file_descriptor = wiringPiI2CSetup(address);
+		char *filename = (char*)"/dev/i2c-1";
+	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
+		//ERROR HANDLING: you can check errno to see what went wrong
+	}
+	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
+		//ERROR HANDLING; you can check errno to see what went wrong
+	}
+	// _file_descriptor = wiringPiI2CSetup(address);
+
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps)
 {
-	_file_descriptor = wiringPiI2CSetup(__ADDRESS);
+		char *filename = (char*)"/dev/i2c-1";
+	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
+		//ERROR HANDLING: you can check errno to see what went wrong
+	}
+	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
+		//ERROR HANDLING; you can check errno to see what went wrong
+	}
+	// _file_descriptor = wiringPiI2CSetup(__ADDRESS);
+
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -31,7 +71,19 @@ INA219::INA219(int shunt_resistance, float max_expected_amps)
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 {
-	_file_descriptor = wiringPiI2CSetup(address);
+		char *filename = (char*)"/dev/i2c-1";
+	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
+		//ERROR HANDLING: you can check errno to see what went wrong
+	}
+	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
+	{
+		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
+		//ERROR HANDLING; you can check errno to see what went wrong
+	}
+	// _file_descriptor = wiringPiI2CSetup(address);
+
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -41,15 +93,37 @@ INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 uint16_t
 INA219::read_register(uint8_t register_address)
 {
-	uint16_t register_value = wiringPiI2CReadReg16(_file_descriptor, register_address);
+	uint16_t register_value;
+	int length = 2;			//<<< Number of bytes to read
+	if (read(_file_descriptor, &register_value, length) != length)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		return -1;
+		//ERROR HANDLING: i2c transaction failed
+		// NS_FATAL_ERROR("Failed to read from the i2c bus.");
+	}
+	else
+	{
+		return register_value;
+	}
+
+
+	// uint16_t register_value = wiringPiI2CReadReg16(_file_descriptor, register_address);
 	// NS_LOG_DEBUG("read register 0x" << std::hex << register_address << ": 0x" << register_value << " 0b" << std::bitset<16>(register_value).to_string());
 	return register_value;
 }
 void
 INA219::write_register(uint8_t register_address, uint16_t register_value)
 {
+	int length = 2;			//<<< Number of bytes to write
+	if (write(_file_descriptor, &register_value, length) != length)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	{
+		/* ERROR HANDLING: i2c transaction failed */
+		// NS_FATAL_ERROR("Failed to write to the i2c bus.");
+	}
+
+	
+	// wiringPiI2CWriteReg16 (_file_descriptor, register_address, register_value);
 	// NS_LOG_DEBUG("write register 0x" << std::hex << register_address << ": 0x" << register_value << "0b" << std::bitset<16>(register_value).to_string());
-	wiringPiI2CWriteReg16 (_file_descriptor, register_address, register_value) ;
 }
 
 void

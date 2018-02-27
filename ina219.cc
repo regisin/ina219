@@ -98,41 +98,26 @@ INA219::read_register(uint8_t register_address)
 	if (write(_file_descriptor, buf, 1) != 1) {
 		// NS_FATAL_ERROR("Failed to set register.");
 	}
+	usleep(1000);
 	if (read(_file_descriptor, buf, 2) != 2) {
 		// NS_FATAL_ERROR("Failed to read register value.");
 	}
 	return buf[0] | (buf[1] << 8);
 
-
-
-///////////////////////delete maybe
-	// uint16_t register_value;
-	// int length = 2;			//<<< Number of bytes to read
-	// if (read(_file_descriptor, &register_value, length) != length)		//read() returns the number of bytes actually read, if it doesn't match then an error occurred (e.g. no response from the device)
-	// {
-	// 	return -1;
-	// 	//ERROR HANDLING: i2c transaction failed
-	// 	// NS_FATAL_ERROR("Failed to read from the i2c bus.");
-	// }
-	// else
-	// {
-	// 	return register_value;
-	// }
-/////////////////////////
-
 //original
 	// uint16_t register_value = wiringPiI2CReadReg16(_file_descriptor, register_address);
 	// NS_LOG_DEBUG("read register 0x" << std::hex << register_address << ": 0x" << register_value << " 0b" << std::bitset<16>(register_value).to_string());
-	return register_value;
+	//return register_value;
 }
 void
 INA219::write_register(uint8_t register_address, uint16_t register_value)
 {
 	uint8_t buf[3];
 	buf[0] = register_address;
-	buf[1] = register_value & 0xFF;
-	buf[2] = (register_value >> 8) & 0xFF;
-	if (write(_file_descriptor, buf, length) != 3)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	buf[1] = (register_value >> 8) & 0xFF;
+	buf[2] = register_value & 0xFF;
+	
+	if (write(_file_descriptor, buf, 3) != 3)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
 	{
 		/* ERROR HANDLING: i2c transaction failed */
 		// NS_FATAL_ERROR("Failed to write to the i2c bus.");

@@ -1,10 +1,9 @@
 #include "ina219.h"
 
-// #include <wiringPiI2C.h>
 #include <unistd.h>
-#include <fcntl.h>				//Needed for I2C port
-#include <sys/ioctl.h>			//Needed for I2C port
-#include <linux/i2c-dev.h>		//Needed for I2C port
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
 
 #include <bitset>
 #include <math.h>
@@ -17,14 +16,11 @@ INA219::INA219(int shunt_resistance)
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-		//ERROR HANDLING: you can check errno to see what went wrong
 	}
 	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-		//ERROR HANDLING; you can check errno to see what went wrong
 	}
-	// _file_descriptor = wiringPiI2CSetup(__ADDRESS);
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -36,14 +32,11 @@ INA219::INA219(int shunt_resistance, uint8_t address)
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-		//ERROR HANDLING: you can check errno to see what went wrong
 	}
 	if (ioctl(_file_descriptor, I2C_SLAVE, address) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-		//ERROR HANDLING; you can check errno to see what went wrong
 	}
-	// _file_descriptor = wiringPiI2CSetup(address);
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -55,14 +48,11 @@ INA219::INA219(int shunt_resistance, float max_expected_amps)
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-		//ERROR HANDLING: you can check errno to see what went wrong
 	}
 	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-		//ERROR HANDLING; you can check errno to see what went wrong
 	}
-	// _file_descriptor = wiringPiI2CSetup(__ADDRESS);
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -75,14 +65,11 @@ INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-		//ERROR HANDLING: you can check errno to see what went wrong
 	}
 	if (ioctl(_file_descriptor, I2C_SLAVE, address) < 0)
 	{
 		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-		//ERROR HANDLING; you can check errno to see what went wrong
 	}
-	// _file_descriptor = wiringPiI2CSetup(address);
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -103,11 +90,6 @@ INA219::read_register(uint8_t register_address)
 		// NS_FATAL_ERROR("Failed to read register value.");
 	}
 	return buf[0] | (buf[1] << 8);
-
-//original
-	// uint16_t register_value = wiringPiI2CReadReg16(_file_descriptor, register_address);
-	// NS_LOG_DEBUG("read register 0x" << std::hex << register_address << ": 0x" << register_value << " 0b" << std::bitset<16>(register_value).to_string());
-	//return register_value;
 }
 void
 INA219::write_register(uint8_t register_address, uint16_t register_value)
@@ -117,21 +99,17 @@ INA219::write_register(uint8_t register_address, uint16_t register_value)
 	buf[1] = (register_value >> 8) & 0xFF;
 	buf[2] = register_value & 0xFF;
 	
-	if (write(_file_descriptor, buf, 3) != 3)		//write() returns the number of bytes actually written, if it doesn't match then an error occurred (e.g. no response from the device)
+	if (write(_file_descriptor, buf, 3) != 3)
 	{
-		/* ERROR HANDLING: i2c transaction failed */
 		// NS_FATAL_ERROR("Failed to write to the i2c bus.");
 	}
-
-	
-	// wiringPiI2CWriteReg16 (_file_descriptor, register_address, register_value);
 	// NS_LOG_DEBUG("write register 0x" << std::hex << register_address << ": 0x" << register_value << "0b" << std::bitset<16>(register_value).to_string());
 }
 
 void
 INA219::configure(int voltage_range, int gain, int bus_adc, int shunt_adc)
 {
-	int len = sizeof( __BUS_RANGE ) / sizeof( __BUS_RANGE[0] );
+	int len = sizeof(__BUS_RANGE) / sizeof(__BUS_RANGE[0]);
 	if (voltage_range > len-1) {
 		// NS_FATAL_ERROR("Invalid voltage range, must be one of: RANGE_16V, RANGE_32V");
 	}
@@ -162,7 +140,7 @@ INA219::configure(int voltage_range, int gain, int bus_adc, int shunt_adc)
 	// << ", shunt ADC: " << shunt_adc);
 
 	calibrate(__BUS_RANGE[voltage_range], __GAIN_VOLTS[_gain], _max_expected_amps);
-	uint16_t calibration = (uint16_t)(voltage_range << __BRNG | _gain << __PG0 | bus_adc << __BADC1 | shunt_adc << __SADC1 | __CONT_SH_BUS);
+	uint16_t calibration = (voltage_range << __BRNG | _gain << __PG0 | bus_adc << __BADC1 | shunt_adc << __SADC1 | __CONT_SH_BUS);
 	// NS_LOG_DEBUG("configuration: 0x" << std::hex << calibration);
 	write_register(__REG_CONFIG, calibration);
 }
@@ -267,7 +245,7 @@ float
 INA219::shunt_voltage()
 {
 	handle_current_overflow();
-	int shunt_voltage = (int) read_register(__REG_SHUNTVOLTAGE); // (int) because it is a signed integer
+	int shunt_voltage = (int16_t) read_register(__REG_SHUNTVOLTAGE); // (int) because it is a signed integer
 	return __SHUNT_MILLIVOLTS_LSB * shunt_voltage;
 }
 float
@@ -279,7 +257,7 @@ float
 INA219::current()
 {
 	handle_current_overflow();
-	int current = (int) read_register(__REG_CURRENT); // (int) because it is a signed integer
+	int current = (int16_t) read_register(__REG_CURRENT); // (int) because it is a signed integer
 	return current * _current_lsb * 1000;
 }
 float

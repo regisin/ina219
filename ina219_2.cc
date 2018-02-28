@@ -4,11 +4,15 @@
 #include <math.h>
 #include <float.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
 
 /* Constructors */
 INA219::INA219(int shunt_resistance)
 {
-	I2C _i2c(__ADDRESS);
+	_address = __ADDRESS;
+    init();
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -16,7 +20,8 @@ INA219::INA219(int shunt_resistance)
 }
 INA219::INA219(int shunt_resistance, uint8_t address)
 {
-	I2C _i2c(address);
+	_address = address;
+    init();
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -24,7 +29,8 @@ INA219::INA219(int shunt_resistance, uint8_t address)
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps)
 {
-    I2C _i2c(__ADDRESS);
+    _address = __ADDRESS;
+    init();
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -33,7 +39,8 @@ INA219::INA219(int shunt_resistance, float max_expected_amps)
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 {
-	I2C _i2c(address);
+	_address = address;
+    init();
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -41,16 +48,50 @@ INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 	_auto_gain_enabled = false;
 }
 
+void
+INA219::init()
+{
+    char *filename = (char*)"/dev/i2c-1";
+
+	if ((_fd = open(filename, O_RDWR)) < 0)
+	{
+		// "Failed to open the i2c bus: " << _file_descriptor
+	}
+	if (ioctl(_fd, I2C_SLAVE, _address) < 0)
+	{
+		// "Failed to acquire bus access and/or talk to slave."
+	}
+}
+
 /* Private functions */
 uint16_t
 INA219::__read_register(uint8_t register_address)
 {
-	return _i2c->read_register(register_address);
+    uint8_t buf[3];
+    buf[0] = register_address;
+	if (write(_file_descriptor, buf, 1) != 1) {
+		// "Failed to set register."
+	}
+	usleep(1000);
+	if (read(_file_descriptor, buf, 2) != 2) {
+		// "Failed to read register value."
+	}
+	return buf[0] | (buf[1] >> 8);
+	// return _i2c->read_register(register_address);
 }
 void
 INA219::__write_register(uint8_t register_address, uint16_t register_value)
 {
-    _i2c->write_register(register_address, register_value);
+    uint8_t buf[3];
+	buf[0] = register_address;
+	buf[1] = (register_value >> 8) & 0xFF;
+	buf[2] = register_value & 0xFF;
+	
+	if (write(_file_descriptor, buf, 3) != 3)
+	{
+		// "Failed to write to the i2c bus."
+	}
+    // _i2c->write_register(register_address, register_value);
 }
 
 void

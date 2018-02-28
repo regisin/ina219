@@ -9,7 +9,6 @@
 I2C::I2C(uint8_t address)
 {
     device_address = address;
-
     char *filename = (char*)"/dev/i2c-1";
 
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
@@ -40,15 +39,11 @@ uint16_t
 I2C::read_register(uint8_t register_address)
 {
     uint8_t buf[3];
-	
     buf[0] = register_address;
-
 	if (write(_file_descriptor, buf, 1) != 1) {
 		// "Failed to set register."
 	}
-
 	usleep(1000);
-
 	if (read(_file_descriptor, buf, 2) != 2) {
 		// "Failed to read register value."
 	}

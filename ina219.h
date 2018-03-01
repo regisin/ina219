@@ -68,10 +68,10 @@
 class INA219{
     /* Constructors */
     public:
-        INA219(int shunt_resistance);                                           // Use default values, auto gain
-        INA219(int shunt_resistance, uint8_t address);                          // Auto gain
-        INA219(int shunt_resistance, float max_expected_amps);                  // Custom max amps
-        INA219(int shunt_resistance, float max_expected_amps, uint8_t address); // Custom device address and amps
+        INA219(float shunt_resistance);                                           // Use default values, auto gain
+        INA219(float shunt_resistance, uint8_t address);                          // Auto gain
+        INA219(float shunt_resistance, float max_expected_amps);                  // Custom max amps
+        INA219(float shunt_resistance, float max_expected_amps, uint8_t address); // Custom device address and amps
     
     
     /* Private functions */
@@ -89,14 +89,14 @@ class INA219{
     /* Private viarables */
     private:
         int     _file_descriptor;
-        int     _shunt_ohms;
+        float     _shunt_ohms;
         float   _max_expected_amps;
         float   _min_device_current_lsb;
         bool    _auto_gain_enabled;
         int     _voltage_range;
         int     _gain;
-        int     _current_lsb;
-        int     _power_lsb;
+        float   _current_lsb;
+        float   _power_lsb;
     
 
     /* Public functions */

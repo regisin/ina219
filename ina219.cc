@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "ina219.h"
 
 #include <unistd.h>
@@ -10,7 +12,7 @@
 #include <float.h>
 
 /* Constructors */
-INA219::INA219(int shunt_resistance)
+INA219::INA219(float shunt_resistance)
 {
 	init_i2c(__ADDRESS);
 
@@ -18,7 +20,7 @@ INA219::INA219(int shunt_resistance)
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
 }
-INA219::INA219(int shunt_resistance, uint8_t address)
+INA219::INA219(float shunt_resistance, uint8_t address)
 {
 	init_i2c(address);
 
@@ -26,7 +28,7 @@ INA219::INA219(int shunt_resistance, uint8_t address)
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
 }
-INA219::INA219(int shunt_resistance, float max_expected_amps)
+INA219::INA219(float shunt_resistance, float max_expected_amps)
 {
 	init_i2c(__ADDRESS);
 
@@ -35,7 +37,7 @@ INA219::INA219(int shunt_resistance, float max_expected_amps)
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
 }
-INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
+INA219::INA219(float shunt_resistance, float max_expected_amps, uint8_t address)
 {
 	init_i2c(address);
 
@@ -156,7 +158,7 @@ INA219::calibrate(int bus_volts_max, float shunt_volts_max, float max_expected_a
 	// NS_LOG_DEBUG("max possible current: " << max_possible_amps << "A");
 	_current_lsb = determine_current_lsb(max_expected_amps, max_possible_amps);
 	// NS_LOG_DEBUG("current LSB: " << std::scientific << _current_lsb << " A/bit");
-	_power_lsb = _current_lsb * 20;
+	_power_lsb = _current_lsb * 20.0;
 	// NS_LOG_DEBUG("power LSB: " << std::scientific << _power_lsb << " W/bit");
 	float max_current = _current_lsb * 32767;
 	// NS_LOG_DEBUG("max current before overflow: " << max_current << "A");
@@ -213,7 +215,7 @@ INA219::reset()
 bool
 INA219::has_current_overflow()
 {
-	int ovf = read_register(__REG_BUSVOLTAGE) & __OVF;
+	uint16_t ovf = read_register(__REG_BUSVOLTAGE) & 1;
     return (ovf == 1);
 }
 
@@ -233,21 +235,24 @@ INA219::shunt_voltage()
 float
 INA219::supply_voltage()
 {
-	return voltage() + (float(shunt_voltage()) / 1000);
+	return voltage() + (shunt_voltage() / 1000.0);
 }
 float
 INA219::current()
 {
 	handle_current_overflow();
-	int current = (int16_t) read_register(__REG_CURRENT); // (int) because it is a signed integer
-	return current * _current_lsb * 1000;
+	uint16_t current_raw = read_register(__REG_CURRENT);
+	int16_t current = (int16_t)current_raw;
+	if (current > 32767) current -= 65536;
+	return  current * _current_lsb * 1000.0;
 }
 float
 INA219::power()
 {
 	handle_current_overflow();
-	int power = read_register(__REG_POWER);
-	return power * _power_lsb * 1000;
+	uint16_t power_raw = read_register(__REG_POWER);
+	int16_t power = (int16_t)power_raw;
+	return power * _power_lsb * 1000.0;
 }
 void
 INA219::handle_current_overflow()

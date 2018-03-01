@@ -71,14 +71,14 @@ INA219::read_register(uint8_t register_address)
 	if (read(_file_descriptor, buf, 2) != 2) {
 		// NS_FATAL_ERROR("Failed to read register value.");
 	}
-	return buf[0] | (buf[1] << 8);
+	return (buf[0] << 8) | buf[1];
 }
 void
 INA219::write_register(uint8_t register_address, uint16_t register_value)
 {
 	uint8_t buf[3];
 	buf[0] = register_address;
-	buf[1] = (register_value >> 8) & 0xFF;
+	buf[1] = register_value >> 8;
 	buf[2] = register_value & 0xFF;
 	
 	if (write(_file_descriptor, buf, 3) != 3)

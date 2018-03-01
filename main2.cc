@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
 
     uint8_t buf[3];
 	buf[0] = 0x00;
-	buf[1] = (calibration >> 8) & 0xFF;
+	buf[1] = (calibration >> 8);
 	buf[2] = calibration & 0xFF;
 	
 	if (write(FD, buf, 3) != 3)

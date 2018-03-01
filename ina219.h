@@ -76,6 +76,7 @@ class INA219{
     
     /* Private functions */
     private:
+        void init_i2c(uint8_t address);
         uint16_t read_register(uint8_t register_value);
         void write_register(uint8_t register_address, uint16_t register_value);
         int determine_gain(float max_expected_amps);

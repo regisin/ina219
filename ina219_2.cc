@@ -76,8 +76,7 @@ INA219::__read_register(uint8_t register_address)
 	if (read(_file_descriptor, buf, 2) != 2) {
 		// "Failed to read register value."
 	}
-	return buf[0] | (buf[1] >> 8);
-	// return _i2c->read_register(register_address);
+	return (buf[0] << 8) | buf[1];
 }
 void
 INA219::__write_register(uint8_t register_address, uint16_t register_value)
@@ -91,7 +90,6 @@ INA219::__write_register(uint8_t register_address, uint16_t register_value)
 	{
 		// "Failed to write to the i2c bus."
 	}
-    // _i2c->write_register(register_address, register_value);
 }
 
 void

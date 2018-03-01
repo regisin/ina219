@@ -12,15 +12,7 @@
 /* Constructors */
 INA219::INA219(int shunt_resistance)
 {
-	char *filename = (char*)"/dev/i2c-1";
-	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-	}
-	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-	}
+	init_i2c(__ADDRESS);
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -28,15 +20,7 @@ INA219::INA219(int shunt_resistance)
 }
 INA219::INA219(int shunt_resistance, uint8_t address)
 {
-	char *filename = (char*)"/dev/i2c-1";
-	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-	}
-	if (ioctl(_file_descriptor, I2C_SLAVE, address) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-	}
+	init_i2c(address);
 
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
@@ -44,15 +28,7 @@ INA219::INA219(int shunt_resistance, uint8_t address)
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps)
 {
-	char *filename = (char*)"/dev/i2c-1";
-	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to open the i2c bus, error number: " << _file_descriptor);
-	}
-	if (ioctl(_file_descriptor, I2C_SLAVE, __ADDRESS) < 0)
-	{
-		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
-	}
+	init_i2c(__ADDRESS);
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -61,6 +37,17 @@ INA219::INA219(int shunt_resistance, float max_expected_amps)
 }
 INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 {
+	init_i2c(address);
+
+	_shunt_ohms = shunt_resistance;
+	_max_expected_amps = max_expected_amps;
+	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
+	_auto_gain_enabled = false;
+}
+
+void
+INA219::init_i2c(uint8_t address)
+{
 	char *filename = (char*)"/dev/i2c-1";
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
@@ -70,11 +57,6 @@ INA219::INA219(int shunt_resistance, float max_expected_amps, uint8_t address)
 	{
 		// NS_FATAL_ERROR("Failed to acquire bus access and/or talk to slave.");
 	}
-
-	_shunt_ohms = shunt_resistance;
-	_max_expected_amps = max_expected_amps;
-	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
-	_auto_gain_enabled = false;
 }
 
 uint16_t

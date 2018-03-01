@@ -65,8 +65,6 @@
 
 #include <stdint.h>
 
-// #include "i2c.h"
-
 class INA219{
     /* Constructors */
     public:
@@ -123,7 +121,7 @@ class INA219{
         int     _current_lsb;
         int     _power_lsb;
 
-        // I2C     *_i2c;
+
         int _fd;
         uint8_t _address;
         void init();

@@ -1,4 +1,9 @@
-all: ina219.o simple-auto-gain.o auto-gain-high-resolution.o manual-gain-high-resolution.o
+all: mkdirs ina219.o simple-auto-gain.o auto-gain-high-resolution.o manual-gain-high-resolution.o
+
+mkdirs:
+	mkdir ./build
+	mkdir ./build/lib
+	mkdir ./build/examples
 
 simple-auto-gain.o: ina219.o
 	g++ -o ./build/lib/simple-auto-gain.o -c ./examples/simple-auto-gain.c

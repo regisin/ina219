@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]){
 
-	std::cout << "Simple Auto Gain example" << std::endl;
+	std::cout << "Manual Gain High Resolution example" << std::endl;
 
 	float SHUNT_OHMS = 0.1;
     float MAX_EXPECTED_AMPS = 3.0;

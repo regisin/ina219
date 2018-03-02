@@ -138,20 +138,20 @@ class INA219{
     
     // Private functions
     private:
-        void init_i2c(uint8_t address);
-        uint16_t read_register(uint8_t register_value);
-        void write_register(uint8_t register_address, uint16_t register_value);
-        int determine_gain(float max_expected_amps);
-        float determine_current_lsb(float max_expected_amps, float max_possible_amps);
-        void calibrate(int bus_volts_max, float shunt_volts_max, float max_expected_amps);
-        void handle_current_overflow();
-        void increase_gain();
+        void        init_i2c(uint8_t address);
+        uint16_t    read_register(uint8_t register_value);
+        void        write_register(uint8_t register_address, uint16_t register_value);
+        int         determine_gain(float max_expected_amps);
+        float       determine_current_lsb(float max_expected_amps, float max_possible_amps);
+        void        calibrate(int bus_volts_max, float shunt_volts_max, float max_expected_amps);
+        void        handle_current_overflow();
+        void        increase_gain();
     
 
     // Private viarables
     private:
         int     _file_descriptor;
-        float     _shunt_ohms;
+        float   _shunt_ohms;
         float   _max_expected_amps;
         float   _min_device_current_lsb;
         bool    _auto_gain_enabled;

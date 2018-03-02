@@ -15,6 +15,7 @@ INA219::INA219(float shunt_resistance)
 	_shunt_ohms = shunt_resistance;
 	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
 	_auto_gain_enabled = false;
+	_max_expected_amps = false;
 }
 INA219::INA219(float shunt_resistance, uint8_t address)
 {
@@ -95,7 +96,7 @@ INA219::configure(int voltage_range, int gain, int bus_adc, int shunt_adc)
 	}
 	_voltage_range = voltage_range;
 
-	if (_max_expected_amps) {
+	if (_max_expected_amps != false) {
 		if (gain == GAIN_AUTO) {
 			_auto_gain_enabled = true;
 			_gain = determine_gain(_max_expected_amps);

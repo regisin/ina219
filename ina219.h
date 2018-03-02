@@ -1,5 +1,25 @@
-#ifndef _LIB_INA219_PI_2
-#define _LIB_INA219_PI_2
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2018 University of Nevada, Reno
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Paulo Alexandre Regis <pregis@nevada.unr.edu>
+ */
+
+#ifndef _LIB_INA219_PI
+#define _LIB_INA219_PI
 
 #define RANGE_16V                           0 // Range 0-16 volts
 #define RANGE_32V                           1 // Range 0-32 volts
@@ -65,16 +85,58 @@
 
 #include <stdint.h>
 
+/**
+ * \defgroup ina219 INA219 Current Sensor
+ * This section documents the API of the INA219 sensor library.
+ */
+
+/**
+ * \ingroup ina219
+ * 
+ * \brief INA219 class to read/write to the INA219 current sensor.
+ * 
+ * An INA219 object will read and write from/to a file descriptor.
+ * This file descriptor is associated to a Linux I2C device,
+ * representing the INA219 sensor.
+ * 
+ */
 class INA219{
-    /* Constructors */
+    // Constructors
     public:
-        INA219(float shunt_resistance);                                           // Use default values, auto gain
-        INA219(float shunt_resistance, uint8_t address);                          // Auto gain
-        INA219(float shunt_resistance, float max_expected_amps);                  // Custom max amps
+        /**
+         * @brief Use default address 0x40.
+         * 
+         * @param shunt_resistance Shunt resistance in Ohms.
+         */
+        INA219(float shunt_resistance);
+        /**
+         * @brief Use custom I2C address.
+         * 
+         * @param shunt_resistance Shunt resistance in Ohms.
+         * @param address Custom I2C address.
+         */
+        INA219(float shunt_resistance, uint8_t address);
+        /**
+         * @brief If the current draw from the system is known, it will
+         *        give better resolution in the measurements.
+         * 
+         * @param shunt_resistance Shunt resistance in Ohms.
+         * @param max_expected_amps Maximum expected current in Amps.
+         */
+        INA219(float shunt_resistance, float max_expected_amps);
+        /**
+         * @brief If the current draw from the system is known, it will
+         *        give better resolution in the measurements.
+         *        Use custom I2C address.
+         * 
+         * @param shunt_resistance Shunt resistance in Ohms.
+         * @param max_expected_amps Maximum expected current in Amps.
+         * @param address Custom I2C address.
+         */
         INA219(float shunt_resistance, float max_expected_amps, uint8_t address); // Custom device address and amps
     
     
-    /* Private functions */
+    // Private functions
     private:
         void init_i2c(uint8_t address);
         uint16_t read_register(uint8_t register_value);
@@ -86,7 +148,7 @@ class INA219{
         void increase_gain();
     
 
-    /* Private viarables */
+    // Private viarables
     private:
         int     _file_descriptor;
         float     _shunt_ohms;
@@ -99,21 +161,97 @@ class INA219{
         float   _power_lsb;
     
 
-    /* Public functions */
+    // Public functions
     public:
+        /**
+         * @brief Configures and calibrates how the INA219 will take measurements.
+         * 
+         * @param voltage_range The full scale voltage range, this is either 16V
+                                or 32V represented by one of the following constants;
+                                RANGE_16V, RANGE_32V (default).
+        * @param gain The gain which controls the maximum range of the shunt
+                    voltage represented by one of the following constants;
+                    GAIN_1_40MV, GAIN_2_80MV, GAIN_4_160MV,
+                    GAIN_8_320MV, GAIN_AUTO (default).
+        * @param bus_adc The bus ADC resolution (9, 10, 11, or 12-bit) or
+                        set the number of samples used when averaging results
+                        represent by one of the following constants; ADC_9BIT,
+                        ADC_10BIT, ADC_11BIT, ADC_12BIT (default),
+                        ADC_2SAMP, ADC_4SAMP, ADC_8SAMP, ADC_16SAMP,
+                        ADC_32SAMP, ADC_64SAMP, ADC_128SAMP.
+        * @param shunt_adc The shunt ADC resolution (9, 10, 11, or 12-bit) or
+                            set the number of samples used when averaging results
+                            represent by one of the following constants; ADC_9BIT,
+                            ADC_10BIT, ADC_11BIT, ADC_12BIT (default),
+                            ADC_2SAMP, ADC_4SAMP, ADC_8SAMP, ADC_16SAMP,
+                            ADC_32SAMP, ADC_64SAMP, ADC_128SAMP.
+        */
         void configure(int voltage_range, int gain, int bus_adc, int shunt_adc);
+
+        /**
+         * @brief Put the INA219 into power down mode.
+         * 
+         */
         void sleep();
+
+        /**
+         * @brief Wake the INA219 from power down mode.
+         * 
+         */
         void wake();
+
+        /**
+         * @brief Reset the INA219 to its default configuration.
+         * 
+         */
         void reset();
+
+        /**
+         * @brief Returns true if the sensor has detect current overflow.
+         *        In this case the current and power values are invalid.
+         * 
+         * @return true If overflow is detected. Current and power values are invalid.
+         * @return false No overflow detected, readings are valid.
+         */
         bool has_current_overflow();
+
+        /**
+         * @brief Reads the bus voltage register from the sensor and converts to Volts.
+         * 
+         * @return float Bus voltage in volts (V).
+         */
         float voltage();
+
+        /**
+         * @brief Reads the shunt voltage register from the sensor and converts to millivolts.
+         * 
+         * @return float Shunt voltage in millivolts (mV). "Inf" or "NaN" when overflow is detected.
+         */
         float shunt_voltage();
+
+        /**
+         * @brief This is the sum of the bus voltage and shunt voltage. 
+         * 
+         * @return float Supply voltage in volts (V). "Inf" or "NaN" when overflow is detected.
+         */
         float supply_voltage();
+
+        /**
+         * @brief Reads the current register from the sensor and converts to milliamps.
+         * 
+         * @return float Current in milliamps (mA) going through the sensor. "Inf" or "NaN" when overflow is detected.
+         */
         float current();
+
+        /**
+         * @brief Reads the bus power register from the sensor and converts to milliwatts.
+         * 
+         * @return float Bus power consumption in milliwatts (mW).  "Inf" or "NaN" when overflow is detected.
+         */
         float power();
     
 
-    /* Public variables, because cant #define arrays */
+    // Public variables, because cant #define arrays
     public:
         float __GAIN_VOLTS[4]   = {0.04, 0.08, 0.16, 0.32};
         int   __BUS_RANGE[2]    = {16, 32};

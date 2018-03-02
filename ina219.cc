@@ -1,17 +1,13 @@
-#include <iostream>
-
 #include "ina219.h"
 
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
-
 #include <bitset>
 #include <math.h>
 #include <float.h>
 
-/* Constructors */
 INA219::INA219(float shunt_resistance)
 {
 	init_i2c(__ADDRESS);
@@ -229,7 +225,7 @@ float
 INA219::shunt_voltage()
 {
 	handle_current_overflow();
-	int shunt_voltage = (int16_t) read_register(__REG_SHUNTVOLTAGE); // (int) because it is a signed integer
+	int16_t shunt_voltage = (int16_t) read_register(__REG_SHUNTVOLTAGE); // (int) because it is a signed integer
 	return __SHUNT_MILLIVOLTS_LSB * shunt_voltage;
 }
 float

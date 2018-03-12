@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS);
     i.configure(RANGE_16V, GAIN_8_320MV, ADC_12BIT, ADC_12BIT);
 
-    std::cout << "time_s,bus_voltage_V,supply_voltage_V,shunt_voltage_mV,current_mA,power_mW,discharged_C" << std::endl;
+    std::cout << "time_s,bus_voltage_V,supply_voltage_V,shunt_voltage_mV,current_mA,power_mW" << std::endl;
 
     int c = 0;
     while(c < 5)

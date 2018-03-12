@@ -18,19 +18,16 @@ The low power mode of the INA219 is supported, so if only occasional reads are b
 Build:
 
 ```shell
-git clone https://github.com/regisin/pi_ina219cpp.git
-cd pi_ina219cpp
-make all
+git clone https://github.com/regisin/ina219.git
+cd ina219
+make
 ```
 
-Running examples after compiling _all_:
+Running examples after compiling:
 
 ```shell
-cd pi_ina219cpp/build/examples
-
-./simple-auto-gain
-./auto-gain-high-resolution
-./manual-gain-high-resolution
+cd ina219
+./build/profiler --help
 ```
 
 ## Usage
@@ -39,127 +36,69 @@ The address of the sensor unless otherwise specified is the default of _0x40_.
 
 Note that the bus voltage is that on the load side of the shunt resister, if you want the voltage on the supply side then you should add the bus voltage and shunt voltage together, or use the *supply_voltage()* function.
 
-### Simple - Auto Gain
-
-This mode is great for getting started, as it will provide valid readings until the device current capability is exceeded for the value of the shunt resistor connected (3.2A for 0.1&Omega; shunt resistor). It does this by automatically adjusting the gain as required until the maximum is reached.
-
-The downside of this approach is reduced current and power resolution.
-
-
 ```cpp
 #include <iostream>
-#include <stdio.h>
 #include <unistd.h>
-#include "ina219.h"
+#include "src/ina219.h"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[])
+{
+    float SHUNT_OHMS = 0.1;
+    float MAX_EXPECTED_AMPS = 3.2;
+    
+    INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS);
+    i.configure(RANGE_16V, GAIN_8_320MV, ADC_12BIT, ADC_12BIT);
 
-	std::cout << "Simple Auto Gain example" << std::endl;
+    std::cout << "time_s,bus_voltage_V,supply_voltage_V,shunt_voltage_mV,current_mA,power_mW,discharged_C" << std::endl;
 
-	float SHUNT_OHMS = 0.1;
-
-	INA219 i(SHUNT_OHMS);
-	i.configure(RANGE_32V, GAIN_AUTO, ADC_12BIT, ADC_12BIT);
-
-	int c = 0;
-	while(c < 5){
-		std::cout << "---T: " << c << std::endl;
-		std::cout << "Bus Voltave = " << i.voltage() << " V" << std::endl;
-		std::cout << "Supply Voltave = " << i.supply_voltage() << " V" << std::endl;
-		std::cout << "Shunt Voltave = " << i.shunt_voltage() << " mV" << std::endl;
-		std::cout << "Current = " << i.current() << " mA" << std::endl;
-		std::cout << "Power = " << i.power() << " mW" << std::endl;
-		c++;
-		sleep(1);
-	}
-
-	return 0;
+    int c = 0;
+    while(c < 5)
+    {
+        float current = i.current();
+        std::cout << c << ","
+                    << i.voltage() << ","
+                    << i.supply_voltage() << ","
+                    << i.shunt_voltage() << ","
+                    << i.current() << ","
+                    << i.power() << std::endl;
+            c++;
+            usleep(1000000); // 1s
+        }
+    }
+    return 0;
 }
 ```
 
-### Advanced - Auto Gain, High Resolution
+### Profiler tool
 
-In this mode by understanding the maximum current expected in your system and specifying this in the script you can achieve the best possible current and power resolution. The library will calculate the best gain to achieve the highest resolution based on the maximum expected current.
+We provide a tool that exemplifies the usage of the ina219 class. The original `python` library features the AUTO-GAIN capability. However, in this `c++` version it is not yet available.
 
-In this mode if the current exceeds the maximum specified, the gain will be automatically increased, so a valid reading will still result, but at a lower resolution.
+The profiler tool can be used to characterize the battery. For example, to implement a [Coulomb counter](https://en.wikipedia.org/wiki/State_of_charge) algorithm.
 
-```cpp
-#include <iostream>
-#include <stdio.h>
-#include <unistd.h>
-#include "ina219.h"
-
-int main(int argc, char *argv[]){
-
-	std::cout << "Simple Auto Gain example" << std::endl;
-
-	float SHUNT_OHMS = 0.1;
-    float MAX_EXPECTED_AMPS = 3.0;
-
-	INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS);
-	i.configure(RANGE_16V, GAIN_AUTO, ADC_12BIT, ADC_12BIT);
-
-	int c = 0;
-	while(c < 5){
-		std::cout << "---T: " << c << std::endl;
-		std::cout << "Bus Voltave = " << i.voltage() << " V" << std::endl;
-		std::cout << "Supply Voltave = " << i.supply_voltage() << " V" << std::endl;
-		std::cout << "Shunt Voltave = " << i.shunt_voltage() << " mV" << std::endl;
-		std::cout << "Current = " << i.current() << " mA" << std::endl;
-		std::cout << "Power = " << i.power() << " mW" << std::endl;
-		c++;
-		sleep(1);
-	}
-
-	return 0;
-}
-```
-
-### Advanced - Manual Gain, High Resolution
-
-In this mode by understanding the maximum current expected in your system and specifying this and the gain in the script you can always achieve the  best possible current and power resolution, at the price of missing current and power values if a current overflow occurs.
+With the battery fully charged, run:
 
 ```cpp
-#include <iostream>
-#include <stdio.h>
-#include <unistd.h>
-#include "ina219.h"
+./build/profiler -p
 
-int main(int argc, char *argv[]){
+//or, if you want to adjust the parameters based on your system setup, see the usage
 
-	std::cout << "Simple Auto Gain example" << std::endl;
-
-	float SHUNT_OHMS = 0.1;
-    float MAX_EXPECTED_AMPS = 3.0;
-
-	INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS);
-	i.configure(RANGE_16V, GAIN_1_40MV, ADC_12BIT, ADC_12BIT);
-
-	int c = 0;
-	while(c < 5){
-		std::cout << "---T: " << c << std::endl;
-		std::cout << "Bus Voltave = " << i.voltage() << " V" << std::endl;
-		std::cout << "Supply Voltave = " << i.supply_voltage() << " V" << std::endl;
-		std::cout << "Shunt Voltave = " << i.shunt_voltage() << " mV" << std::endl;
-		std::cout << "Current = " << i.current() << " mA" << std::endl;
-		std::cout << "Power = " << i.power() << " mW" << std::endl;
-		c++;
-		sleep(1);
-	}
-
-	return 0;
-}
+./build/profiler --help
 ```
+This command outputs all INA219 information. You can use `./build/profiler -p >> log.txt` to output to a file and run the script until the battery runs out. The, using, the log created, we can define an initial state for the battery (when fully charged) by summing the coulombs (`Q=I*t`) from each row.
+
+After getting the initial state, you can get the current state of charge by running this command as soon as the system boots:
+
+```cpp
+/build/profiler -e INITIAL_CHARGE >> state.txt
+```
+
+The profiler will descrease the initial charge (assuming 100% charged) every second. It will save the output to the `state.txt` file. The last lines of the file should show a percent value close to `0` if the executed properly (charging the battery to 100%, executing  script as soon as booted, etc).
 
 ### Sensor Address
 
 The sensor address may be altered as follows:
 
 ```cpp
-INA219 i(SHUNT_OHMS, 0x41);
-
-//or
-
 INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS, 0x41);
 ```
 
@@ -168,7 +107,7 @@ INA219 i(SHUNT_OHMS, MAX_EXPECTED_AMPS, 0x41);
 The sensor may be put in low power mode between reads as follows:
 
 ```cpp
-i.configure(RANGE_16V, GAIN_AUTO, ADC_12BIT, ADC_12BIT);
+i.configure(RANGE_16V, GAIN_8_320MW, ADC_12BIT, ADC_12BIT);
 while (True)
 {
     std::cout << "Bus voltage: " << i.voltage() << " V" << std::endl;
@@ -185,28 +124,28 @@ Note that if you do not wake the device after sleeping, the value returned from 
 * `INA219()` constructs the class.
 The arguments, are:
     * shunt_ohms: The value of the shunt resistor in Ohms (mandatory).
-    * max_expected_amps: The maximum expected current in Amps (optional). **Device only supports upto 3.2A.**
-    * address: The I2C address of the INA219, defaults to *0x40* (optional).
+    * max_expected_amps: The maximum expected current in Amps (mandatory). **Device only supports up to 3.2A.**
+    * address: The I2C address of the INA219, defaults to **0x40** (optional).
 * `configure()` configures and calibrates how the INA219 will take measurements.
 The arguments, which are all mandatory, are:
     * voltage_range: The full scale voltage range, this is either 16V or 32V, 
-    represented by one of the following constants (optional).
+    represented by one of the following constants (mandatory).
         * RANGE_16V: Range zero to 16 volts
-        * RANGE_32V: Range zero to 32 volts (**default**). **Device only supports upto 26V.**
+        * RANGE_32V: Range zero to 32 volts. **Device only supports up to 26V.**
     * gain: The gain, which controls the maximum range of the shunt voltage, 
-        represented by one of the following constants (optional). 
+        represented by one of the following constants (mandatory). 
         * GAIN_1_40MV: Maximum shunt voltage 40mV
         * GAIN_2_80MV: Maximum shunt voltage 80mV
         * GAIN_4_160MV: Maximum shunt voltage 160mV
         * GAIN_8_320MV: Maximum shunt voltage 320mV
-        * GAIN_AUTO: Automatically calculate the gain (**default**)
+        * GAIN_AUTO: Automatically calculate the gain (**NOT IMPLEMENTED YET**)
     * bus_adc: The bus ADC resolution (9, 10, 11, or 12-bit), or
         set the number of samples used when averaging results, represented by
-        one of the following constants (optional).
+        one of the following constants (mandatory).
         * ADC_9BIT: 9 bit, conversion time 84us.
         * ADC_10BIT: 10 bit, conversion time 148us.
         * ADC_11BIT: 11 bit, conversion time 276us.
-        * ADC_12BIT: 12 bit, conversion time 532us (**default**).
+        * ADC_12BIT: 12 bit, conversion time 532us.
         * ADC_2SAMP: 2 samples at 12 bit, conversion time 1.06ms.
         * ADC_4SAMP: 4 samples at 12 bit, conversion time 2.13ms.
         * ADC_8SAMP: 8 samples at 12 bit, conversion time 4.26ms.
@@ -216,11 +155,11 @@ The arguments, which are all mandatory, are:
         * ADC_128SAMP: 128 samples at 12 bit, conversion time 68.10ms.
     * shunt_adc: The shunt ADC resolution (9, 10, 11, or 12-bit), or
         set the number of samples used when averaging results, represented by
-        one of the following constants (optional).
+        one of the following constants (mandatory).
         * ADC_9BIT: 9 bit, conversion time 84us.
         * ADC_10BIT: 10 bit, conversion time 148us.
         * ADC_11BIT: 11 bit, conversion time 276us.
-        * ADC_12BIT: 12 bit, conversion time 532us (**default**).
+        * ADC_12BIT: 12 bit, conversion time 532us.
         * ADC_2SAMP: 2 samples at 12 bit, conversion time 1.06ms.
         * ADC_4SAMP: 4 samples at 12 bit, conversion time 2.13ms.
         * ADC_8SAMP: 8 samples at 12 bit, conversion time 4.26ms.
@@ -233,10 +172,14 @@ The arguments, which are all mandatory, are:
 * `shunt_voltage()` Returns the shunt voltage in millivolts (mV).
 * `current()` Returns the bus current in milliamps (mA).
 * `power()` Returns the bus power consumption in milliwatts (mW).
-* `has_current_overflow()` Returns 'true' if an overflow has occured.
 * `sleep()` Put the INA219 into power down mode.
 * `wake()` Wake the INA219 from power down mode.
 * `reset()` Reset the INA219 to its default configuration.
+
+
+## Known issues
+
+When there is a current overflow, the current and power readings become irrelevant forever (or, if I run the python library examples, then the profiler with a good max amp, it works again). Have to find a way to "reset" the invalid readings "on-the-fly".
 
 ## Performance
 

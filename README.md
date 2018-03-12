@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
     int c = 0;
     while(c < 5)
     {
-        float current = i.current();
         std::cout << c << ","
                     << i.voltage() << ","
                     << i.supply_voltage() << ","

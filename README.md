@@ -175,11 +175,6 @@ The arguments, which are all mandatory, are:
 * `wake()` Wake the INA219 from power down mode.
 * `reset()` Reset the INA219 to its default configuration.
 
-
-## Known issues
-
-When there is a current overflow, the current and power readings become irrelevant forever (or, if I run the python library examples, then the profiler with a good max amp, it works again). Have to find a way to "reset" the invalid readings "on-the-fly".
-
 ## Performance
 
 TO-DO.

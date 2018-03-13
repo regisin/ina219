@@ -96,7 +96,7 @@ INA219::calibrate(int bus_volts_max, float shunt_volts_max, float max_expected_a
 	_current_lsb = determine_current_lsb(max_expected_amps, max_possible_amps);
 	_power_lsb = _current_lsb * 20.0;
 	uint16_t calibration = (uint16_t) trunc(__CALIBRATION_FACTOR / (_current_lsb * _shunt_ohms));
-	write_register(__REG_CONFIG, calibration);
+	write_register(__REG_CALIBRATION, calibration);
 }
 float
 INA219::determine_current_lsb(float max_expected_amps, float max_possible_amps)

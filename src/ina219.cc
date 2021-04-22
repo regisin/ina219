@@ -84,13 +84,13 @@ INA219::configure(int voltage_range, int gain, int bus_adc, int shunt_adc)
 	_voltage_range = voltage_range;
 	_gain = gain;
 
-	calibrate(__BUS_RANGE[voltage_range], __GAIN_VOLTS[gain], _max_expected_amps);
+	calibrate(__GAIN_VOLTS[gain], _max_expected_amps);
 	uint16_t calibration = (voltage_range << __BRNG | _gain << __PG0 | bus_adc << __BADC1 | shunt_adc << __SADC1 | __CONT_SH_BUS);
 	write_register(__REG_CONFIG, calibration);
 }
 
 void
-INA219::calibrate(int bus_volts_max, float shunt_volts_max, float max_expected_amps)
+INA219::calibrate(float shunt_volts_max, float max_expected_amps)
 {
 	float max_possible_amps = shunt_volts_max / _shunt_ohms;
 	_current_lsb = determine_current_lsb(max_expected_amps, max_possible_amps);

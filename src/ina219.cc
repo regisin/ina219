@@ -7,17 +7,9 @@
 #include <bitset>
 #include <math.h>
 
-INA219::INA219(float shunt_resistance, float max_expected_amps)
+INA219::INA219(float shunt_resistance, float max_expected_amps, uint8_t address, const char* i2c_bus)
 {
-	init_i2c(__ADDRESS);
-
-	_shunt_ohms = shunt_resistance;
-	_max_expected_amps = max_expected_amps;
-	_min_device_current_lsb = __CALIBRATION_FACTOR / (_shunt_ohms * __MAX_CALIBRATION_VALUE);
-}
-INA219::INA219(float shunt_resistance, float max_expected_amps, uint8_t address)
-{
-	init_i2c(address);
+	init_i2c(address, i2c_bus);
 
 	_shunt_ohms = shunt_resistance;
 	_max_expected_amps = max_expected_amps;
@@ -28,12 +20,10 @@ INA219::~INA219()
 	close(_file_descriptor);
 }
 
-
-
 void
-INA219::init_i2c(uint8_t address)
+INA219::init_i2c(uint8_t address, const char* i2c_bus)
 {
-	char *filename = (char*)"/dev/i2c-1";
+	char *filename = (char*)i2c_bus;
 	if ((_file_descriptor = open(filename, O_RDWR)) < 0)
 	{
 		perror("Failed to open the i2c bus");

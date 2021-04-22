@@ -42,6 +42,8 @@
 #define ADC_64SAMP                          14 // 64 samples at 12-bit, conversion time 34.05ms.
 #define ADC_128SAMP                         15 // 128 samples at 12-bit, conversion time 68.10ms.
 
+#define __I2C_BUS                           "/dev/i2c-1"
+
 #define __ADDRESS                           0x40
 
 #define __REG_CONFIG                        0x00
@@ -106,28 +108,21 @@ class INA219
         /**
          * @brief If the current draw from the system is known, it will
          *        give better resolution in the measurements.
+         *        Use custom I2C address and bus.
          * 
          * @param shunt_resistance Shunt resistance in Ohms.
          * @param max_expected_amps Maximum expected current in Amps.
+         * @param address Custom I2C address. (optional)
+         * @param I2C bus. (optional)
          */
-        INA219(float shunt_resistance, float max_expected_amps);
-        /**
-         * @brief If the current draw from the system is known, it will
-         *        give better resolution in the measurements.
-         *        Use custom I2C address.
-         * 
-         * @param shunt_resistance Shunt resistance in Ohms.
-         * @param max_expected_amps Maximum expected current in Amps.
-         * @param address Custom I2C address.
-         */
-        INA219(float shunt_resistance, float max_expected_amps, uint8_t address); // Custom device address and amps
+        INA219(float shunt_resistance, float max_expected_amps, uint8_t address = __ADDRESS, const char* i2c_bus = __I2C_BUS); // Custom device address and amps
 
         ~INA219();
     
     
     // Private functions
     private:
-        void        init_i2c(uint8_t address);
+        void        init_i2c(uint8_t address, const char* i2c_bus);
         uint16_t    read_register(uint8_t register_value);
         void        write_register(uint8_t register_address, uint16_t register_value);
         float       determine_current_lsb(float max_expected_amps, float max_possible_amps);

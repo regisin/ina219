@@ -125,6 +125,7 @@ The arguments, are:
     * shunt_ohms: The value of the shunt resistor in Ohms (mandatory).
     * max_expected_amps: The maximum expected current in Amps (mandatory). **Device only supports up to 3.2A.**
     * address: The I2C address of the INA219, defaults to **0x40** (optional).
+    * i2c_bus: The full path of the I2C bus device wherein the INA219 address is located, defaults to **/dev/i2c-1** (optional).
 * `configure()` configures and calibrates how the INA219 will take measurements.
 The arguments, which are all mandatory, are:
     * voltage_range: The full scale voltage range, this is either 16V or 32V, 

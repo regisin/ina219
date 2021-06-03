@@ -17,10 +17,20 @@ The low power mode of the INA219 is supported, so if only occasional reads are b
 
 Build:
 
+* using `make`
 ```shell
 git clone https://github.com/regisin/ina219.git
 cd ina219
 make
+```
+
+* using `cmake`
+```shell
+git clone https://github.com/regisin/ina219.git
+cd ina219
+mkdir build && cd build  # or just `cd src` for an in-source build
+cmake ..
+cmake --build .
 ```
 
 Running examples after compiling:

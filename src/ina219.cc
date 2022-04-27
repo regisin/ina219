@@ -162,7 +162,7 @@ INA219::current()
 {
 	uint16_t current_raw = read_register(__REG_CURRENT);
 	int16_t current = (int16_t)current_raw;
-	if (current > 32767) current -= 65536;
+	if (current_raw > 32767) current -= 65536;
 	return  current * _current_lsb * 1000.0;
 }
 float
